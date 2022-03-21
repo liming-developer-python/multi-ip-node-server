@@ -31,7 +31,7 @@ const _livetightening = (req, res) => {
     });
 };
 
-_livetightening();
+// _livetightening();
 
 app.get('/', function(req, res) {
     console.log(server_data)
