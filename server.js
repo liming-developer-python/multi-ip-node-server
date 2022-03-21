@@ -29,9 +29,11 @@ const _livetightening = (req, res) => {
             console.error(`Error in making connection for ${ip.controllerIP}:${ip.controllerPORT}`, err);
         }
     });
+
+    return createdIpIntances;
 };
 
-// _livetightening();
+_livetightening();
 
 app.get('/', function(req, res) {
     console.log(server_data)
@@ -41,6 +43,9 @@ app.get('/', function(req, res) {
 app.post('/server_add', function (req, res) {
     console.log(req.body);
     server_data.push({ idx: server_data.length + 1, controllerIP: req.body.ip_address, controllerPORT: req.body.port_number});
+    let new_server_info = new iotDeviceListnerBuilder(req.body.ip_address, req.body.ip_address);
+    let new_server = new_server_info.build();
+    createdIpIntances.push(new_server);
     res.redirect('/');
 });
 
@@ -48,6 +53,18 @@ app.post('/server_remove', function (req, res) {
     for (var i = 0; i < server_data.length; i++) {
         if (server_data[i].idx == req.body.idx)
         {
+            for (var j = 0; j < createdIpIntances.length; j++) {
+                if (createdIpIntances[j].controllerIp == server_data[i].controllerIP && createdIpIntances[j].controllerPort == server_data[i].controllerPORT){
+                    createdIpIntances[j].unsubscribe("lastTightening", (err, data) => {
+                        if (err) {
+                            console.log("Error on unsubscribing to ", createdIpIntances[j].controllerIp, createdIpIntances[j].controllerPort, err);
+                            return;
+                        }
+
+                        console.log("Unsubscribed to ", createdIpIntances[j].controllerIp, createdIpIntances[j].controllerPort);
+                    });
+                }
+            }
             server_data.splice(i , 1);
         }
     }

@@ -8,11 +8,11 @@ class iotDeviceListnerBuilder {
             //Configuring Session Control
             defaultRevisions: undefined,  // {"mid": rev, "mid": rev}
             linkLayerActivate: undefined, // true activate / false not activate / undefined autoNegotiation
-            genericMode: false,           // true activate / false ou undefined not activate 
+            genericMode: undefined,           // true activate / false ou undefined not activate
             keepAlive: 10000,             // Number, default 10000
             //Configuring LinkLayer
             rawData: false,               // true activate / false ou undefined not activate
-            disableMidParsing: undefined, // true activate / false ou undefined not activate
+            disableMidParsing: {}, // true activate / false ou undefined not activate
             timeOut: 3000,                // Number, default 3000
             retryTimes: 3                 // Number, default 3
         };
