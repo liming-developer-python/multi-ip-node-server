@@ -15,7 +15,8 @@ Change this also in ```server.js```
 Execute "db.sql" file to the database.
 
 - Part Servers
-you should run part servers first.
+
+You should run part servers first.
 ```node test_1.js```  Run ```127.0.0.1:4000``` Server to connect from Main Server.
 ```node test_2.js```  Run ```127.0.0.1:5000``` Server to connect from Main Server.
 
