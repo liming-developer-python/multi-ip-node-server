@@ -82,17 +82,20 @@
                                         <tr>
                                             <th>IP Address</th>
                                             <th>Port Number</th>
+                                            <th>Connection Status</th>
                                             <th class="w-3"></th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         <% for(let i =0;i < serverData.length; i++){ %>
-                                            <tr id="row_<%= serverData[i].idx %>">
-                                                <td><%= serverData[i].controllerIP %> </td>
-                                                <td><%= serverData[i].controllerPORT %> </td>
+                                            <tr class="row-server" id="row_<%= serverData[i].id %>">
+                                                <td class="server-ip"><%= serverData[i].ip %> </td>
+                                                <td class="server-port"><%= serverData[i].port %> </td>
+                                                <td class="con-status" id="">Checking</td>
                                                 <td>
                                                     <form action="/server_remove" method="post">
-                                                        <input type="hidden" name="idx" value="<%= serverData[i].idx %>">
+                                                        <input type="hidden" name="ip_address" value="<%= serverData[i].ip %>">
+                                                        <input type="hidden" name="port_number" value="<%= serverData[i].port %>">
                                                         <button type="submit" class="btn btn-outline-primary btn-sm">
                                                             Remove Server
                                                         </button>
@@ -128,6 +131,27 @@
 
 <!-- Custom Js-->
 <script src="js/custom.js"></script>
+
+<script>
+
+    $(document).ready(function () {
+        $(".row-server").each(function () {
+            var els = $(this).find(".con-status");
+            var ip = $(this).find(".server-ip")[0].innerText;
+            var port = $(this).find(".server-port")[0].innerText;
+
+            $.ajax({
+                type: "POST",
+                url: "/server_status_check",
+                data: {ip: ip, port: parseInt(port)},
+                success: function (res) {
+                    els[0].innerText = res.toString();
+                }
+            });
+        });
+
+    });
+</script>
 
 </body>
 </html>
