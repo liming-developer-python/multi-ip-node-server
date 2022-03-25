@@ -22,7 +22,7 @@ You should run part servers first.
 
 
 Finally, ```node server.js```
-Check http://localhost:3000/
+Then check http://localhost:3000/
 
 ![image](https://user-images.githubusercontent.com/75870530/160172762-68f71f61-79e5-45ae-87b6-9b866b7c0d53.png)
 
