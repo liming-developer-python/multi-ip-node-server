@@ -11,7 +11,7 @@ const db = mysql.createConnection({
     host: "localhost",
     user: "root",
     password: "",
-    database: "multi_ip",
+    database: "multi-ip",
 });
 
 db.connect(function(err) {
@@ -21,8 +21,8 @@ db.connect(function(err) {
 
 app.set('views', __dirname);
 app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(bodyParser.json({ type: 'application/*+json' }))
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ type: 'application/*+json' }));
 
 let serverData = [];
 
@@ -41,8 +41,10 @@ function updateServerStatus(ip, port, check_status) {
 }
 
 function _liveTightening(ip, port, remove_server=0) {
-    let op = openProtocol.createClient(port, ip, () => {
-        console.log("Connected!");
+    let op = openProtocol.createClient(port, ip, (data) => {
+        console.log("Connected! ", JSON.stringify(data));
+
+        console.log("Subscribed!, waiting for the operator to tighten");
 
         op.subscribe("lastTightening", (err, data) => {
             if (err) {
@@ -50,7 +52,6 @@ function _liveTightening(ip, port, remove_server=0) {
                 return console.log("Error on Subscribe", err);
             }
 
-            startTightening(1, "ASDEDCUHBG34563EDFRCVGFR6");
         });
     });
 
@@ -63,50 +64,6 @@ function _liveTightening(ip, port, remove_server=0) {
         console.log("Tightening received!", JSON.stringify(midData));
     });
 
-    function startTightening(parameterSetID, numberVIN) {
-        // --> Abort Job --> Select Pset --> Set VehicleId --> Disable Tool --> Enable Tool
-
-        op.command("abortJob", (err) => {
-            if (err) {
-                updateServerStatus(ip, port, 1);
-                return console.log("Fail on abortJob", err);
-            }
-
-            op.command("selectPset", { payload: { parameterSetID } }, (err) => {
-
-                if (err) {
-                    updateServerStatus(ip, port, 1);
-                    return console.log("Fail on selectPset", err);
-                }
-
-                op.command("vinDownload", { payload: { numberVIN } }, (err) => {
-
-                    if (err) {
-                        updateServerStatus(ip, port, 1);
-                        return console.log("Fail on vinDownload", err);
-                    }
-
-                    op.command("disableTool", (err, data) => {
-
-                        if (err) {
-                            updateServerStatus(ip, port, 1);
-                            return console.log("Fail on disableTool", err);
-                        }
-
-                        op.command("enableTool", (err, data) => {
-
-                            if (err) {
-                                updateServerStatus(ip, port, 1);
-                                return console.log("Fail on enableTool", err);
-                            }
-
-                            console.log("waiting for the operator to tighten");
-                        });
-                    });
-                });
-            });
-        });
-    }
     if (remove_server == 1){
         updateServerStatus(ip, port, 1);
     }
