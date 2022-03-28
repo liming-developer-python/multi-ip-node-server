@@ -44,14 +44,13 @@ function _liveTightening(ip, port, remove_server=0) {
     let op = openProtocol.createClient(port, ip, (data) => {
         console.log("Connected! ", JSON.stringify(data));
 
-        console.log("Subscribed!, waiting for the operator to tighten");
-
         op.subscribe("lastTightening", (err, data) => {
             if (err) {
                 updateServerStatus(ip, port, 1);
                 return console.log("Error on Subscribe", err);
             }
 
+            console.log("Subscribed!, waiting for the operator to tighten");
         });
     });
 
