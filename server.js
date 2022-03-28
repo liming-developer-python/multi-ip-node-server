@@ -5,6 +5,13 @@ const path = require('path');
 const openProtocol = require('node-open-protocol');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
+const { PubSub } = require('@google-cloud/pubsub'); // Imports the Google Cloud client library
+const pubSubClient = new PubSub();                    // Creates a PubSub client
+const topicName = 'pf6000-telemetry-data';         // PubSub topic name
+
+const controllerConMsg = 'Connected, MID0002';
+const httpSuccessMsg = 'IOT data is published into PubSub topic, ' + topicName;
+const httpFailedMsg = 'IOT data publishing error; PubSub topic, ' + topicName;
 
 // Create DB connection
 const db = mysql.createConnection({
@@ -42,7 +49,7 @@ function updateServerStatus(ip, port, check_status) {
 
 function _liveTightening(ip, port, remove_server=0) {
     let op = openProtocol.createClient(port, ip, (data) => {
-        console.log("Connected! ", JSON.stringify(data));
+        console.log(controllerConMsg, JSON.stringify(data));
 
         op.subscribe("lastTightening", (err, data) => {
             if (err) {
@@ -61,6 +68,15 @@ function _liveTightening(ip, port, remove_server=0) {
 
     op.on("lastTightening", (midData) => {
         console.log("Tightening received!", JSON.stringify(midData));
+
+        const dataBuffer = Buffer.from(JSON.stringify(midData));
+        try {
+            const messageId = pubSubClient.topic(topicName).publish(dataBuffer);
+            console.log(httpSuccessMsg + ' ' + messageId);
+        } catch (error) {
+            console.error(httpFailedMsg + ' ' + error.message);
+            process.exitCode = 1;
+        }
     });
 
     if (remove_server == 1){
