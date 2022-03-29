@@ -160,7 +160,7 @@ app.post('/server_remove', function (req, res) {
 
 app.listen(port, function () {
     app.use(express.static(path.join(__dirname, '/assets')));
-    console.log(`Example app listening on port ${port}`);
+    console.log(`app is listening on port ${port}`);
 });
 
 setInterval(() => console.log('app is running'), 30000);
