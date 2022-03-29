@@ -163,3 +163,4 @@ app.listen(port, function () {
     console.log(`Example app listening on port ${port}`);
 });
 
+setInterval(() => console.log('app is running'), 30000);
