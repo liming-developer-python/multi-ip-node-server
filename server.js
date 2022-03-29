@@ -18,7 +18,7 @@ const db = mysql.createConnection({
     host: "localhost",
     user: "root",
     password: "",
-    database: "multi-ip",
+    database: "multi-ip"
 });
 
 db.connect(function(err) {
@@ -57,6 +57,7 @@ function _liveTightening(ip, port, remove_server=0) {
                 return console.log("Error on Subscribe", err);
             }
 
+            updateServerStatus(ip, port, 0);
             console.log("Subscribed!, waiting for the operator to tighten");
         });
     });
@@ -67,6 +68,7 @@ function _liveTightening(ip, port, remove_server=0) {
     });
 
     op.on("lastTightening", (midData) => {
+        updateServerStatus(ip, port, 0);
         console.log("Tightening received!", JSON.stringify(midData));
 
         const dataBuffer = Buffer.from(JSON.stringify(midData));
@@ -82,9 +84,9 @@ function _liveTightening(ip, port, remove_server=0) {
     if (remove_server == 1){
         updateServerStatus(ip, port, 1);
     }
-    else {
-        updateServerStatus(ip, port, 0);
-    }
+    // else {
+    //     updateServerStatus(ip, port, 0);
+    // }
 }
 
 app.get('/', function(req, res) {
@@ -93,10 +95,10 @@ app.get('/', function(req, res) {
         if (err) {
             throw err;
         }
-        for (var i = 0; i < results.length; i ++){
-            _liveTightening(results[i].ip, parseInt(results[i].port));
-        }
-        console.log(serverData);
+        // for (var i = 0; i < results.length; i ++){
+        //     _liveTightening(results[i].ip, parseInt(results[i].port));
+        // }
+        // console.log(serverData);
         res.render(path.join(__dirname, 'index.ejs'), { serverData: results });
     });
 });
@@ -104,6 +106,11 @@ app.get('/', function(req, res) {
 app.post('/server_status_check', function (req, res) {
     var serverExists = 0;
     var checkStatus = 0;
+    var serverStatus = req.body.serverStatus;
+    if (serverStatus == 1) {
+        _liveTightening(req.body.ip, parseInt(req.body.port));
+    }
+
     for (var i = 0; i < serverData.length; i++){
         if (serverData[i].ip == req.body.ip && serverData[i].port == parseInt(req.body.port)){
             serverExists = 1;
@@ -111,7 +118,7 @@ app.post('/server_status_check', function (req, res) {
             break;
         }
     }
-    // console.log("Check Request", req.body.ip, req.body.port);
+
     if (serverExists == 1 && checkStatus == 0) {
         res.end('Connected');
     }
@@ -144,8 +151,9 @@ app.post('/server_remove', function (req, res) {
             res.redirect('/');
             throw err;
         }
-        _liveTightening(req.body.ip_address, parseInt(req.body.port_number), 1);
-        console.log(serverData);
+        // _liveTightening(req.body.ip_address, parseInt(req.body.port_number), 1);
+        // console.log(serverData);
+        updateServerStatus(req.body.ip_address, parseInt(req.body.port_number), 1);
         res.redirect('/');
     });
 });
