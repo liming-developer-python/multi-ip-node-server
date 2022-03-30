@@ -165,7 +165,7 @@ app.post('/server_remove', function (req, res) {
         // _liveTightening(req.body.ip_address, parseInt(req.body.port_number), 1);
         // console.log(serverData);
         updateServerStatus(req.body.ip_address, parseInt(req.body.port_number), 1);
-        res.redirect('/');
+        res.end("success");
     });
 });
 

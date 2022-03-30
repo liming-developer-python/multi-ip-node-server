@@ -136,16 +136,31 @@
     $(document).ready(function () {
         $(".con-status").each(function () {
             console.log($(this)[0].innerText);
-            if ($(this)[0].innerText == "1") {
-                $(this)[0].innerText = "Not Connected";
-            }
-            else {
+            if ($(this)[0].innerText == "0") {
                 $(this)[0].innerText = "Connected";
                 var row_id = $(this).attr('id').replace("status_", "");
                 var btn = $("#connect_btn_" + row_id);
                 btn.prop('disabled', true);
             }
+            else {
+                $(this)[0].innerText = "Not Connected";
+            }
         });
+        $(".remove-btn").on('click', function () {
+            var row_id = $(this).attr('id').replace("remove_btn_", "");
+            var ip = $("#ip_address_" + row_id)[0].innerText;
+            var port = $("#port_number_" + row_id)[0].innerText;
+
+            $.ajax({
+                type: "POST",
+                url: "/server_remove",
+                data: {id: parseInt(row_id), ip_address: ip, port_number: parseInt(port)},
+                success: function (res) {
+                    window.location.reload();
+                }
+            });
+        });
+
         $(".connect-btn").on('click', function () {
             var row_id = $(this).attr('id').replace("connect_btn_", "");
             var els = $("#status_" + row_id)[0];
