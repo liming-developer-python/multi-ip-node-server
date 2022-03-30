@@ -109,6 +109,7 @@ app.post('/server_status_check', function (req, res) {
     var serverExists = 0;
     var checkStatus = 0;
     var serverStatus = req.body.serverStatus;
+
     if (serverStatus == 1) {
         _liveTightening(req.body.ip, parseInt(req.body.port));
     }
@@ -146,17 +147,17 @@ app.post('/server_add', function (req, res) {
             res.redirect('/');
             throw err;
         }
-        if (result[0] == undefined) {
-            console.log(`creating connection for ${req.body.ip_address}:${req.body.port_number}`)
-            _liveTightening(req.body.ip_address, parseInt(req.body.port_number));
-        }
+        // if (result[0] == undefined) {
+        //     console.log(`creating connection for ${req.body.ip_address}:${req.body.port_number}`)
+        //     _liveTightening(req.body.ip_address, parseInt(req.body.port_number));
+        // }
         console.log(serverData);
         res.redirect('/');
     });
 });
 
-app.post('/server_remove', function (req, res) {
-    let sql = `delete from servers where ip='${req.body.ip_address}' and port='${req.body.port_number}'`;
+app.post('/server_disconnect', function (req, res) {
+    let sql = `UPDATE connect_status SET status=1, dis_time=NOW() WHERE server_id='${req.body.id}'`;
     db.query(sql, function (err) {
         if (err) {
             res.redirect('/');

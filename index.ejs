@@ -92,12 +92,13 @@
                                                 <td class="server-ip" id="ip_address_<%= serverData[i].id %>"><%= serverData[i].ip %> </td>
                                                 <td class="server-port" id="port_number_<%= serverData[i].id %>"><%= serverData[i].port %> </td>
                                                 <td class="con-status" id="status_<%= serverData[i].id %>"><%= serverData[i].status  %></td>
+                                                <td style="display: none" id="status_fix_<%= serverData[i].id  %>" ><%= serverData[i].status  %></td>
                                                 <td>
                                                     <button id="connect_btn_<%= serverData[i].id %>" class="connect-btn btn btn-outline-primary btn-sm">
                                                         Connect Server
                                                     </button>
-                                                    <button id="remove_btn_<%= serverData[i].id %>" class="remove-btn btn btn-outline-primary btn-sm">
-                                                        Remove Server
+                                                    <button id="disconnect_btn_<%= serverData[i].id %>" class="disconnect-btn btn btn-outline-primary btn-sm" disabled>
+                                                        Disconnect Server
                                                     </button>
                                                 </td>
                                             </tr>
@@ -139,24 +140,33 @@
             if ($(this)[0].innerText == "0") {
                 $(this)[0].innerText = "Connected";
                 var row_id = $(this).attr('id').replace("status_", "");
-                var btn = $("#connect_btn_" + row_id);
-                btn.prop('disabled', true);
+                var con_btn = $("#connect_btn_" + row_id);
+                con_btn.prop('disabled', true);
+                var dis_btn = $("#disconnect_btn_" + row_id);
+                dis_btn.prop('disabled', false);
             }
             else {
                 $(this)[0].innerText = "Not Connected";
             }
         });
-        $(".remove-btn").on('click', function () {
-            var row_id = $(this).attr('id').replace("remove_btn_", "");
+        $(".disconnect-btn").on('click', function () {
+            var row_id = $(this).attr('id').replace("disconnect_btn_", "");
+            var els = $("#status_" + row_id)[0];
+            var els_fix = $("#status_fix_" + row_id)[0];
             var ip = $("#ip_address_" + row_id)[0].innerText;
             var port = $("#port_number_" + row_id)[0].innerText;
+            var con_btn = $("#connect_btn_" + row_id);
+            var dis_btn = $("#disconnect_btn_" + row_id);
 
             $.ajax({
                 type: "POST",
-                url: "/server_remove",
+                url: "/server_disconnect",
                 data: {id: parseInt(row_id), ip_address: ip, port_number: parseInt(port)},
                 success: function (res) {
-                    window.location.reload();
+                    els.innerText = "Not Connected";
+                    els_fix.innerText = 1;
+                    con_btn.prop('disabled', false);
+                    dis_btn.prop('disabled', true);
                 }
             });
         });
@@ -164,17 +174,13 @@
         $(".connect-btn").on('click', function () {
             var row_id = $(this).attr('id').replace("connect_btn_", "");
             var els = $("#status_" + row_id)[0];
+            var els_fix = $("#status_fix_" + row_id)[0];
             var ip = $("#ip_address_" + row_id)[0].innerText;
             var port = $("#port_number_" + row_id)[0].innerText;
-            var btn = $("#connect_btn_" + row_id);
+            var con_btn = $("#connect_btn_" + row_id);
+            var dis_btn = $("#disconnect_btn_" + row_id);
 
-            var server_status = 0;
-            if (els.innerText == 'Connected') {
-                server_status = 0;
-            }
-            else {
-                server_status = 1;
-            }
+            var server_status = parseInt(els_fix.innerText);
 
             $.ajax({
                 type: "POST",
@@ -182,7 +188,14 @@
                 data: {id: parseInt(row_id), ip: ip, port: parseInt(port), serverStatus: server_status},
                 success: function (res) {
                     els.innerText = res.toString();
-                    btn.prop('disabled', true);
+                    if (res.toString() == "Connected") {
+                        els_fix.innerText = 0;
+                    }
+                    else {
+                        els_fix.innerText = 1;
+                    }
+                    con_btn.prop('disabled', true);
+                    dis_btn.prop('disabled', false);
                 }
             });
         });
