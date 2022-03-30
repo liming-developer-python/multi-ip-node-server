@@ -26,6 +26,12 @@ db.connect(function(err) {
     console.log("DB Connected!");
 });
 
+db.query('DELETE FROM connect_status', function (err, results) {
+    if (err) {
+        throw err;
+    }
+});
+
 app.set('views', __dirname);
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -84,21 +90,19 @@ function _liveTightening(ip, port, remove_server=0) {
     if (remove_server == 1){
         updateServerStatus(ip, port, 1);
     }
-    // else {
-    //     updateServerStatus(ip, port, 0);
-    // }
 }
 
 app.get('/', function(req, res) {
-    let sql = `SELECT servers.*, connect_status.status FROM servers LEFT JOIN connect_status ON servers.id = connect_status.server_id`;
+    let sql = `SELECT servers.*, connect_status.status, connect_status.con_time, connect_status.dis_time 
+        FROM servers LEFT JOIN connect_status ON servers.id = connect_status.server_id`;
     db.query(sql, function (err, results) {
         if (err) {
             throw err;
         }
-        // for (var i = 0; i < results.length; i ++){
-        //     _liveTightening(results[i].ip, parseInt(results[i].port));
-        // }
-        // console.log(serverData);
+        for (var i = 0; i < results.length; i ++){
+            results[i].server_status = results[i].con_time > results[i].dis_time ? 0 : 1;
+        }
+
         res.render(path.join(__dirname, 'index.ejs'), { serverData: results });
     });
 });
@@ -108,18 +112,28 @@ app.post('/server_status_check', function (req, res) {
 
     var serverExists = 0;
     var checkStatus = 0;
-    var serverStatus = req.body.serverStatus;
 
-    if (serverStatus == 1) {
-        _liveTightening(req.body.ip, parseInt(req.body.port));
-    }
+    let check_sql = `SELECT servers.*, connect_status.status, connect_status.con_time, connect_status.dis_time 
+        FROM servers LEFT JOIN connect_status ON servers.id = connect_status.server_id WHERE server_id=?`;
 
-    for (var i = 0; i < serverData.length; i++){
-        if (serverData[i].ip == req.body.ip && serverData[i].port == parseInt(req.body.port)){
-            serverExists = 1;
-            checkStatus = serverData[i].status;
-            break;
+    var server_id = req.body.id;
+    var server_status;
+    var connect_status = 1;
+
+    db.query(check_sql, server_id,function (err, results) {
+        if (err) {
+            res.redirect('/');
+            throw err;
         }
+
+        if (results.length > 0) {
+            server_status = results[0].con_time > results[0].dis_time ? 0 : 1;
+            connect_status = results[0].status;
+        }
+    });
+
+    if (connect_status == 1){
+        _liveTightening(req.body.ip, parseInt(req.body.port));
     }
 
     let post = [parseInt(req.body.id), checkStatus];
@@ -147,24 +161,19 @@ app.post('/server_add', function (req, res) {
             res.redirect('/');
             throw err;
         }
-        // if (result[0] == undefined) {
-        //     console.log(`creating connection for ${req.body.ip_address}:${req.body.port_number}`)
-        //     _liveTightening(req.body.ip_address, parseInt(req.body.port_number));
-        // }
-        console.log(serverData);
+
         res.redirect('/');
     });
 });
 
 app.post('/server_disconnect', function (req, res) {
-    let sql = `UPDATE connect_status SET status=1, dis_time=NOW() WHERE server_id='${req.body.id}'`;
+    let sql = `UPDATE connect_status SET dis_time=NOW() WHERE server_id='${req.body.id}'`;
     db.query(sql, function (err) {
         if (err) {
             res.redirect('/');
             throw err;
         }
-        // _liveTightening(req.body.ip_address, parseInt(req.body.port_number), 1);
-        // console.log(serverData);
+
         updateServerStatus(req.body.ip_address, parseInt(req.body.port_number), 1);
         res.end("success");
     });
