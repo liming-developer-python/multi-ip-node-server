@@ -90,7 +90,7 @@ function _liveTightening(ip, port, remove_server=0) {
 }
 
 app.get('/', function(req, res) {
-    let sql = `select * from servers`;
+    let sql = `SELECT servers.*, connect_status.status FROM servers LEFT JOIN connect_status ON servers.id = connect_status.server_id`;
     db.query(sql, function (err, results) {
         if (err) {
             throw err;
@@ -104,6 +104,8 @@ app.get('/', function(req, res) {
 });
 
 app.post('/server_status_check', function (req, res) {
+    let sql = `call updateServerStatus(?, ?)`;
+
     var serverExists = 0;
     var checkStatus = 0;
     var serverStatus = req.body.serverStatus;
@@ -118,6 +120,15 @@ app.post('/server_status_check', function (req, res) {
             break;
         }
     }
+
+    let post = [parseInt(req.body.id), checkStatus];
+
+    db.query(sql, post,function (err, result) {
+        if (err) {
+            res.redirect('/');
+            throw err;
+        }
+    });
 
     if (serverExists == 1 && checkStatus == 0) {
         res.end('Connected');
